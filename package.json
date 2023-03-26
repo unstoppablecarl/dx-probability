@@ -1,0 +1,19 @@
+{
+  "name": "dx-probability",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "gen-combos": "node src/combo-generator/combo-generator.js",
+    "gen-combat": "node src/combat-report-generator/combat-report-generator.js",
+    "serve": "http-server ./public"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^5.2.0",
+    "chart.js": "^4.2.1",
+    "execution-time": "^1.4.1",
+    "http-server": "^14.1.1"
+  }
+}
