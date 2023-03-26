@@ -1,78 +1,44 @@
 (async function () {
+    const params = new URLSearchParams(document.location.search)
 
-    let max = 5
+    let xdnATK = params.get('atk')
+    let xdnDEF = params.get('def')
 
-    let repeat = []
-    for (let i = 1; i <= max; i++) {
-        repeat.push(i)
-    }
+    let response = await fetch(`/generated/combat-reports/${xdnATK}-vs-${xdnDEF}.json`)
+    let json = await response.json()
 
-    let promises = []
+    let datasets = []
+    let labels = []
 
-    repeat.forEach((atk) => {
-        repeat.forEach((def) => {
-            promises.push({atk, def})
+    let successOrHigher = {}
+
+    let prev = 0
+    Object.keys(json.successPercent).sort().reverse()
+        .forEach((key) => {
+            let val = parseFloat(json.successPercent[key])
+
+            successOrHigher[key] = (val + prev) * 100
+
+            prev += val
         })
+
+    datasets.push({
+        label: `${xdnATK} vs ${xdnDEF}`,
+        data: successOrHigher,
     })
 
-    let {datasets, labels} = await Promise.all(
-        promises.map(async ({atk, def}) => {
-            let response = await fetch(`/generated/combat-reports/${atk}d6-vs-${def}d6.json`)
-            let json = await response.json()
+    labels = Object.keys(json.successPercent)
 
-            return {
-                atk,
-                def,
-                json,
-            }
-        }),
-    ).then((...results) => {
-
-        let datasets = []
-        let labels = []
-        for (let i = 0; i < results[0].length; i++) {
-            let {atk, def, json} = results[0][i]
-
-            let successOrHigher = {}
-
-            let prev = 0
-            Object.keys(json.successPercent).sort().reverse()
-                .forEach((key) => {
-                    let val = parseFloat(json.successPercent[key])
-
-                    successOrHigher[key] = (val + prev) * 100
-
-                    prev += val
-                })
-
-            datasets.push({
-                label: atk + ' vs ' + def,
-                data: successOrHigher,
-            })
-
-            labels = Object.keys(json.successPercent)
-        }
-
-        return {
-            datasets,
-            labels,
-        }
-
-    })
+    let container = document.getElementById('chart-container')
+    let canvas = document.createElement('canvas')
+    container.append(canvas)
 
     new Chart(
-        document.getElementById('chart'),
+        canvas,
         {
             type: 'line',
             data: {
-                // labels: data.map(row => row.successCount),
                 labels,
-                // datasets: [
-                //     {
-                //         label: '1d6 vs 1d6',
-                //         data: data.map(row => row.percent),
-                //     },
-                // ],
                 datasets,
             },
             options: {
