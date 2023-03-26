@@ -2,6 +2,7 @@ import {combat} from './combat.js'
 import {createRequire} from 'module'
 import chalk from 'chalk'
 import {_each, round} from '../support/support.js'
+import fs from 'fs'
 
 const require = createRequire(import.meta.url)
 
@@ -34,6 +35,16 @@ export function logReport(ndxATK, ndxDEF) {
     console.log('percent total: ' + chalk.green(percentTotal))
 }
 
+export function writeReport(ndxATK, ndxDEF) {
+
+    let report = calcReport(ndxATK, ndxDEF)
+
+    let content = JSON.stringify(report)
+    let file = `./public/generated/combat-reports/${ndxATK}-vs-${ndxDEF}.json`
+
+    return fs.promises.writeFile(file, content)
+}
+
 export function calcReport(ndxATK, ndxDEF) {
 
     const atkCombos = require(`../../public/generated/combos/${ndxATK}.json`)
@@ -47,13 +58,19 @@ export function combatReport(atkCombos, defCombos) {
     const successMap = {}
     const blockMap = {}
 
-    atkCombos.forEach((atk) => {
-        defCombos.forEach((def) => {
+    const totalCombos = atkCombos.length * defCombos.length
+    // let bar = new ProgressBar('ELAP: :elapsed ETA: :eta PER: :percent', { total: totalCombos });
+
+    let atkLength = atkCombos.length
+    let defLength = defCombos.length
+
+    for (let atk = 0; atk < atkLength; atk++) {
+        for (let def = 0; def < defLength; def++) {
+
             let {
                 successes,
                 blocks,
-                debug,
-            } = combat(atk, def)
+            } = combat(atkCombos[atk], defCombos[def])
 
             if (!successMap[successes]) {
                 successMap[successes] = 0
@@ -66,8 +83,9 @@ export function combatReport(atkCombos, defCombos) {
             blockMap[blocks]++
             successMap[successes]++
 
-        })
-    })
+            // bar.tick();
+        }
+    }
 
     let successMapSum = _sum(Object.values(successMap))
     let blockMapSum = _sum(Object.values(blockMap))
