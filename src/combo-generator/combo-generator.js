@@ -1,39 +1,41 @@
 import {Worker} from 'worker_threads'
 import ext from 'execution-time'
-
-let number = 10
+import {DIE_SIZES, MAX_DICE_COUNT} from '../config.js'
 
 let p = ext()
 p.start()
 
-for (let i = 1; i <= number; i++) {
+DIE_SIZES.forEach((dieSides) => {
 
-    const dieSides = 6
-    const dieCount = i
-    let xdn = `${dieCount}d${dieSides}`
-    let perf = ext()
-    perf.start()
-    const worker = new Worker('./src/combo-generator/combo-worker.js', {
-        workerData: {
-            dieSides,
-            dieCount,
-        },
-    })
+    for (let i = 1; i <= MAX_DICE_COUNT; i++) {
 
-    worker.once('message', result => {
-        console.log(`${xdn} message: ${result}`)
-    })
+        const dieCount = i
+        let xdn = `${dieCount}d${dieSides}`
+        let perf = ext()
+        perf.start()
+        const worker = new Worker('./src/combo-generator/combo-worker.js', {
+            workerData: {
+                dieSides,
+                dieCount,
+            },
+        })
 
-    worker.on('error', error => {
-        console.log(`${xdn} error: `, error)
-    })
+        worker.once('message', result => {
+            console.log(`${xdn} message: ${result}`)
+        })
 
-    worker.on('exit', exitCode => {
-        if (exitCode !== 0) {
-            console.log(`${xdn} exited with code: ${exitCode}`)
-        }
+        worker.on('error', error => {
+            console.log(`${xdn} error: `, error)
+        })
 
-        const results = perf.stop()
-        console.log(xdn + ' completed : ' + results.preciseWords)
-    })
-}
+        worker.on('exit', exitCode => {
+            if (exitCode !== 0) {
+                console.log(`${xdn} exited with code: ${exitCode}`)
+            }
+
+            const results = perf.stop()
+            console.log(xdn + ' completed : ' + results.preciseWords)
+        })
+    }
+
+})
