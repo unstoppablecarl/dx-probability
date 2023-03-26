@@ -1,2 +1,2 @@
 # dx-probability
-opposing dice probability
+Opposing dice probability
