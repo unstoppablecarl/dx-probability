@@ -15,13 +15,8 @@
         })
     })
 
-    promises = [{
-        atk: 3,
-        def: 3,
-    }]
     let {datasets, labels} = await Promise.all(
         promises.map(async ({atk, def}) => {
-            console.log(atk, def)
             let response = await fetch(`/generated/combat-reports/${atk}d6-vs-${def}d6.json`)
             let json = await response.json()
 
@@ -37,10 +32,22 @@
         let labels = []
         for (let i = 0; i < results[0].length; i++) {
             let {atk, def, json} = results[0][i]
-            console.log(json)
+
+            let successOrHigher = {}
+
+            let prev = 0
+            Object.keys(json.successPercent).sort().reverse()
+                .forEach((key) => {
+                    let val = parseFloat(json.successPercent[key])
+
+                    successOrHigher[key] = (val + prev) * 100
+
+                    prev += val
+                })
+
             datasets.push({
                 label: atk + ' vs ' + def,
-                data: json.successPercent,
+                data: successOrHigher,
             })
 
             labels = Object.keys(json.successPercent)
@@ -67,6 +74,48 @@
                 //     },
                 // ],
                 datasets,
+            },
+            options: {
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            title(tooltipItems) {
+                                let title = ''
+
+                                if (tooltipItems.length > 0) {
+                                    const item = tooltipItems[0]
+                                    const labels = item.chart.data.labels
+                                    const labelCount = labels ? labels.length : 0
+
+                                    if (this && this.options && this.options.mode === 'dataset') {
+                                        title = item.dataset.label || ''
+                                    } else if (item.label) {
+                                        title = item.label
+                                    } else if (labelCount > 0 && item.dataIndex < labelCount) {
+                                        title = labels[item.dataIndex]
+                                    }
+                                }
+
+                                return `roll >= ${title}`
+                            },
+                            label(tooltipItem) {
+                                let label = tooltipItem.dataset.label || ''
+
+                                if (label) {
+                                    label += ': '
+                                }
+                                const value = tooltipItem.formattedValue
+
+                                if (value !== null && value !== undefined) {
+
+                                    label += value + '%'
+                                }
+
+                                return label
+                            },
+                        },
+                    },
+                },
             },
         },
     )
