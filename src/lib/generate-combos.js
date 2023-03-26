@@ -15,7 +15,11 @@ function combinations(choices, n = 1, cache = {}) {
     combos.forEach((combo) => {
         choices.forEach((choice) => {
             let newCombo = [choice].concat(combo)
-            let key = slugify(newCombo)
+
+            newCombo.sort().reverse()
+
+            let key = newCombo.join('-')
+
             if (cache[key]) {
                 return
             }
@@ -26,10 +30,4 @@ function combinations(choices, n = 1, cache = {}) {
     })
 
     return results
-}
-
-function slugify(arr) {
-    arr = arr.sort()
-
-    return arr.join('-')
 }
