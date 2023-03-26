@@ -1,0 +1,16 @@
+{
+  "successMap": {
+    "0": 16653,
+    "1": 7371
+  },
+  "successMapSum": 24024,
+  "successPercent": {
+    "0": "0.69",
+    "1": "0.31"
+  },
+  "blockMap": {
+    "0": 7371,
+    "1": 16653
+  },
+  "blockMapSum": 24024
+}
